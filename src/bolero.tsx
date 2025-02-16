@@ -1,4 +1,4 @@
-import { initStrudel, cat, sequence, sound, chord, freq, note, samples, hush, n, stack } from "@strudel/web"
+import { initStrudel, arrange, cat, sequence, sound, chord, freq, note, samples, hush, n, stack } from "@strudel/web"
 
 function staccato(input_note: any) {
     return cat(input_note, note(`~`)).fast(2)
@@ -27,7 +27,22 @@ export default function BoleroApp() {
     const mb7 = note("d4 g4@2")
     const mb8 = note("g4@7 ~")
 
-    const melody = cat(mb1, mb2, mb3, mb4, mb5, mb6, mb7, mb8).fast(2/3);
+    const mc1 = note("d5@8 c5 b4 a4 b4 c5")
+    const mc2 = note("d5 c5 b4@3 c5 b4 a4 c5 b4 a4 f4")
+    const mc3 = note("f4@2 [f4 ~] [f4 ~] [f4 ~]@2 [a4 ~]@2 c5 a4 b4 g4")
+    const mc4 = note("f4@2 [f4 ~] [f4 ~] [f4 ~]@2 [a4 ~]@2 b4 g4 a4 f4")
+    const mc5 = note("d4 ~ d4 c4 d4@5 ~ [d4 ~] [d4 ~]")
+    const mc6 = note("[d4 ~]@2 [f4 ~]@2 a4 f4 g4 e4 [d4 ~]@2 d4 c4")
+    const mc7 = note("d4@5 ~ d4 c4 d4@2 e4 f4")
+    const mc8 = note("g4@9 f4 e4 d4")
+    const mc9 = note("c4 ~@11")
+    const mc10 = note("~@12")
+
+    // using .fast(2/3) on each of these individual sequences will cause 2/3 of the seqeunce to play, and then play 2/3 of the next sequence, and then play the remaining 1/3
+    // so you need to put .fast(2/3) on the entire thing
+    const melody1 = cat(mb1, mb2, mb3, mb4, mb5, mb6, mb7, mb8);
+    const melody2 = cat(mc1, mc2, mc3, mc4, mc5, mc6, mc7, mc8, mc9, mc10);
+    const melody = arrange([8, melody1], [10, melody2]).fast(2/3);
 
     // this only randomly plays correctly. concatenating sequences as in `cat(cat(tick1, tick1, tick1), cat(tick1, tick1, tick3))`, causes random ordering? 
     // also, two seconds to a cycle. not one?
