@@ -1,6 +1,6 @@
 import { hydrate, prerender as ssr } from 'preact-iso';
+import { initStrudel } from '@strudel/web';
 
-import preactLogo from './assets/preact.svg';
 import './style.css';
 import BoleroApp from './bolero'; 
 
@@ -23,6 +23,7 @@ function Resource(props) {
 
 if (typeof window !== 'undefined') {
 	hydrate(<App />, document.getElementById('app'));
+	initStrudel();
 }
 
 export async function prerender(data) {

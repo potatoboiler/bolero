@@ -1,4 +1,4 @@
-import { initStrudel, arrange, cat, sequence, sound, chord, freq, note, samples, hush, n, stack } from "@strudel/web"
+import { initStrudel, arrange, cat, sound, note, samples, hush, stack } from "@strudel/web"
 
 function staccato(input_note: any) {
     return cat(input_note, note(`~`)).fast(2)
@@ -57,6 +57,7 @@ export default function BoleroApp() {
     };
 
     const stopPattern = () => {
+        // WHY DOESN'T THIS WORK???
         hush();
     }
 

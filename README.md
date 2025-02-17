@@ -27,3 +27,8 @@ Unless... you imposed an algebraic structure on it? Possible to combine CCCatego
 - Samples do not come preloaded (should've guessed that one...).
 - Replication of a bracketed pattern (/ sequence?) does not replicate the entire pattern but each individual element in the array? This is not clear, because THIS IS NOT DOCUMENTED BEHAVIOR IN STRUDEL.
 `!` and `*` are not the same thing, even though they both multiply an event by a certain factor and try to fit them.. all into a single (or multiple?) cycles?
+
+`npx [command name] [argument]` with the error "npm could not determine which executable to run" suggests that the executable is not installed.
+
+Vite pre-rendering breaks with `initStrudel()` as you cannot assign the `initStrudel` property of the window before you render the window.
+Worth looking into as a future issue, perhaps you can follow [this link](https://stackoverflow.com/questions/24700361/window-is-not-defined-on-prerender).
