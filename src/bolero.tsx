@@ -27,7 +27,7 @@ export default function BoleroApp() {
     const mb7 = note("d4 g4@2")
     const mb8 = note("g4@7 ~")
 
-    const mc1 = note("d5@8 c5 b4 a4 b4 c5")
+    const mc1 = note("d5@7 c5 b4 a4 b4 c5")
     const mc2 = note("d5 c5 b4@3 c5 b4 a4 c5 b4 a4 f4")
     const mc3 = note("f4@2 [f4 ~] [f4 ~] [f4 ~]@2 [a4 ~]@2 c5 a4 b4 g4")
     const mc4 = note("f4@2 [f4 ~] [f4 ~] [f4 ~]@2 [a4 ~]@2 b4 g4 a4 f4")
