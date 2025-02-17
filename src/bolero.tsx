@@ -7,6 +7,7 @@ function staccato(input_note: any) {
 export default function BoleroApp() {
     initStrudel();
     samples('github:tidalcycles/dirt-samples')
+    samples('github:potatoboiler/bolero')
     // samples('github:tidalcycles/clean-samples')
     const tick1 = sound(`[sd sd*3]`);
     const tick2 = sound(`[sd sd]`);
@@ -42,7 +43,7 @@ export default function BoleroApp() {
     // so you need to put .fast(2/3) on the entire thing
     const melody1 = cat(mb1, mb2, mb3, mb4, mb5, mb6, mb7, mb8);
     const melody2 = cat(mc1, mc2, mc3, mc4, mc5, mc6, mc7, mc8, mc9, mc10);
-    const melody = arrange([8, melody1], [10, melody2]).fast(2/3);
+    const melody = arrange([8, melody1], [10, melody2]).fast(2/3).sound("nee");
 
     // this only randomly plays correctly. concatenating sequences as in `cat(cat(tick1, tick1, tick1), cat(tick1, tick1, tick3))`, causes random ordering? 
     // also, two seconds to a cycle. not one?
