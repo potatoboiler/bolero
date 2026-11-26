@@ -84,3 +84,26 @@ export interface SynthPlugin {
 }
 ```
 Each plugin registers with Strudel via `registerSound(...)` on `getAudioContext()`, allowing any phrase in `src/bolero.tsx` to swap synths cleanly via `.sound("...")`.
+
+---
+
+## 5. Csound Integration & Procedural Patch Generator (2026-11-26)
+
+### Implemented Architecture (`src/synths/`)
+* **Dependencies:** Added `@csound/browser` (`^7.0.0`, lazy-loaded into `dist/assets/csound-*.js` via dynamic `import()`) and updated `vite` to `^8.4.0`.
+* **`src/synths/types.ts`:** `SynthPlugin` interface with `routing: 'sample' | 'per-voice' | 'persistent-engine'`, optional `applyToPattern(pattern)`, optional `trigger(ctx, time, value, onended, duration)`, optional `updateSource(source)`, and `[Symbol.asyncDispose]()` (`"ESNext.Disposable"` enabled in `tsconfig.json`).
+* **`src/synths/index.ts`:** Replaced `SynthRegistry` with a `const synths = { nee: neeSynth, csound: csoundSynth }` map (`SynthId`, `DEFAULT_SYNTH = 'nee'`), single-map memoized `loadSynth(id)` (with `try / catch` eviction), and `registerSynth` / `registerBuiltInSynths()`.
+* **`src/synths/csound.ts`:** Single-threaded `AudioWorklet` Csound backend (`useWorker: false`, no `COOP`/`COEP` needed for `gh-pages`), scheduling notes via `inputMessage` and hot-compiling `.orc` updates via `compileOrc`.
+* **`src/synths/csound-generator.ts`:** Generates random, `tanh`-limited Csound 7 instruments across 4 synthesis families: Subtractive (`vco2` + `moogladder`), FM (`foscili`), Additive (`poscil` overtone bank), and Modal/Pluck (`mode` + `pluck`).
+* **`src/bolero.tsx`:** Unified melody synth dropdown (`synths`), `melodyCycle` hap tagging (`MELODY_CYCLES = 27` via `withHap`) to auto-randomize Csound on every full *Boléro* melody repeat, patch description readout, and **New Random Sound** button.
+
+### Punted to Branch `synth-sketches` (`2ce8225`)
+* `src/synths/overtone.ts`, `src/synths/worklet-wavetable.ts`, `src/synths/scsynth-wasm.ts`, `src/synths/modal-resonator.ts` were committed to branch `synth-sketches` to keep `main` minimal.
+
+### Cleanup Backlog
+* Verify live-browser audio playback and Preact 11 hydration (only `tsc --noEmit` and `vite build` have been run so far).
+* Decouple Csound-specific UI/subscription logic (`csoundSynth.onPatchChange`, `randomizePatch`, `melodyCycle` tagging) out of `src/bolero.tsx` if generalizing to more synths.
+* Remove duplicate `initStrudel()` call (currently in both `src/index.tsx` and `src/bolero.tsx`).
+* Migrate `package.json` `"eslintConfig"` to a flat `eslint.config.js` so `npx eslint src` works with ESLint 9.
+* Decide whether to merge, expand, or drop the `synth-sketches` branch.
+
