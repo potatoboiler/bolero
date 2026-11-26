@@ -12,7 +12,7 @@ export function App() {
 	);
 }
 
-function Resource(props) {
+function Resource(props: { href: string; title: string; description: string }) {
 	return (
 		<a href={props.href} target="_blank" class="resource">
 			<h2>{props.title}</h2>
@@ -22,10 +22,13 @@ function Resource(props) {
 }
 
 if (typeof window !== 'undefined') {
-	hydrate(<App />, document.getElementById('app'));
+	const app = document.getElementById('app');
+	if (app) {
+		hydrate(<App />, app);
+	}
 	initStrudel();
 }
 
-export async function prerender(data) {
+export async function prerender(data: Record<string, unknown>) {
 	return await ssr(<App {...data} />);
 }
