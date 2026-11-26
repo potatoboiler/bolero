@@ -1,14 +1,45 @@
-import { initStrudel, arrange, cat, sound, note, samples, hush, stack } from "@strudel/web"
+import { useEffect, useState } from "preact/hooks";
+import { initStrudel, arrange, cat, sound, note, samples, hush, stack } from "@strudel/web";
+import {
+    csoundSynth,
+    DEFAULT_SYNTH,
+    loadSynth,
+    registerBuiltInSynths,
+    synths,
+    type SynthId,
+    type SynthPluginStatus,
+} from "./synths";
+
+const MELODY_CYCLES = 27; // (8 + 10) / (2/3) Strudel cycles per full Boléro melody repeat
+
+let strudelInitialized = false;
+registerBuiltInSynths();
+
+function ensureStrudelInitialized() {
+    if (strudelInitialized) {
+        return;
+    }
+    strudelInitialized = true;
+    initStrudel();
+    samples('github:tidalcycles/dirt-samples');
+    samples('github:potatoboiler/bolero');
+}
 
 function staccato(input_note: any) {
     return cat(input_note, note(`~`)).fast(2)
 }
 
 export default function BoleroApp() {
-    initStrudel();
-    samples('github:tidalcycles/dirt-samples')
-    samples('github:potatoboiler/bolero')
-    // samples('github:tidalcycles/clean-samples')
+    const [selectedSynth, setSelectedSynth] = useState<SynthId>(DEFAULT_SYNTH);
+    const [synthStatus, setSynthStatus] = useState<SynthPluginStatus>("ready");
+    const [csoundPatch, setCsoundPatch] = useState<string>(csoundSynth.getDescription());
+    const [isPlaying, setIsPlaying] = useState<boolean>(false);
+
+    useEffect(() => {
+        ensureStrudelInitialized();
+        return csoundSynth.onPatchChange(setCsoundPatch);
+    }, []);
+
     const tick1 = sound(`[sd sd*3]`);
     const tick2 = sound(`[sd sd]`);
     const tick3 = sound(`[sd *6]`);
@@ -43,29 +74,88 @@ export default function BoleroApp() {
     // so you need to put .fast(2/3) on the entire thing
     const melody1 = cat(mb1, mb2, mb3, mb4, mb5, mb6, mb7, mb8);
     const melody2 = cat(mc1, mc2, mc3, mc4, mc5, mc6, mc7, mc8, mc9, mc10);
-    const melody = arrange([8, melody1], [10, melody2]).fast(2/3).sound("nee").speed(1/8).attack(0.6).decay(0).sustain(0).release(0);
+    const baseMelody = arrange([8, melody1], [10, melody2])
+        .fast(2/3)
+        .withHap((hap: any) =>
+            hap.withValue((v: any) => ({
+                ...v,
+                melodyCycle: Math.floor(Number(hap.whole?.begin ?? hap.part.begin) / MELODY_CYCLES),
+            })),
+        );
 
     // this only randomly plays correctly. concatenating sequences as in `cat(cat(tick1, tick1, tick1), cat(tick1, tick1, tick3))`, causes random ordering? 
     // also, two seconds to a cycle. not one?
     const snare = cat(tick1, tick1, tick2, tick1, tick1, tick3).fast(2).gain(0.2)
     const accompaniment = cat(beat1, beat2, beat3, beat1, beat2, beat33).fast(2) // note() is not the same thing as n(). n() fails
-    const pattern = stack(snare, accompaniment, melody)
-    // const pattern = melody
 
-    const _ = new (window.AudioContext)();
-    const playPattern = () => {
-        pattern.play();
+    const buildPattern = (synthName: SynthId) =>
+        stack(
+            snare,
+            accompaniment,
+            synths[synthName].applyToPattern?.(baseMelody) ?? baseMelody.sound(synthName),
+        );
+
+    const handleSelectSynth = async (name: SynthId) => {
+        ensureStrudelInitialized();
+        setSelectedSynth(name);
+        setSynthStatus("loading");
+        try {
+            await loadSynth(name);
+            setSynthStatus("ready");
+            if (isPlaying) {
+                buildPattern(name).play();
+            }
+        } catch (err) {
+            console.error(err);
+            setSynthStatus("error");
+        }
+    };
+
+    const playPattern = async () => {
+        ensureStrudelInitialized();
+        await loadSynth(selectedSynth);
+        setSynthStatus("ready");
+        setIsPlaying(true);
+        buildPattern(selectedSynth).play();
     };
 
     const stopPattern = () => {
         // WHY DOESN'T THIS WORK???
+        setIsPlaying(false);
         hush();
     }
 
+    const availableSynths = Object.values(synths);
+
     return <>
         <h1>YOUR MOMMMMM</h1>
+        <div style={{ marginBottom: "0.75rem" }}>
+            <label htmlFor="synth-select" style={{ marginRight: "0.5rem" }}>Melody Synth:</label>
+            <select
+                id="synth-select"
+                value={selectedSynth}
+                onChange={(e) => void handleSelectSynth((e.target as HTMLSelectElement).value as SynthId)}
+            >
+                {availableSynths.map((plugin) => (
+                    <option key={plugin.name} value={plugin.name}>
+                        {plugin.label}
+                    </option>
+                ))}
+            </select>
+            <span style={{ marginLeft: "0.5rem", fontSize: "0.85em", opacity: 0.8 }}>
+                [{synthStatus}{selectedSynth === "csound" ? ` · ${csoundPatch}` : ""}]
+            </span>
+            {selectedSynth === "csound" && (
+                <button
+                    onClick={() => void csoundSynth.randomizePatch()}
+                    style={{ marginLeft: "0.75rem" }}
+                >
+                    New Random Sound
+                </button>
+            )}
+        </div>
         <div>
-            <button onClick={playPattern}>Play</button>
+            <button onClick={() => void playPattern()}>Play</button>
             <button onClick={stopPattern}>Stop</button>
         </div>
     </>
